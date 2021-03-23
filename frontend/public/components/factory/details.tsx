@@ -33,6 +33,7 @@ import {
   referenceFor,
   modelFor,
 } from '../../module/k8s';
+import { Alert, Rule } from '../monitoring/types';
 import { ErrorBoundaryFallback } from '../error';
 import { breadcrumbsForDetailsPage } from '../utils/breadcrumbs';
 import DetailsBreadcrumbResolver from './details-breadcrumb-resolver';
@@ -128,10 +129,17 @@ export const DetailsPage = withFallback<DetailsPageProps>(({ pages = [], ...prop
           customData={props.customData}
           badge={props.badge || getBadgeFromType(props.kindObj && props.kindObj.badge)}
           icon={props.icon}
+          ele={props.ele}
         >
           {props.children}
         </PageHeading>
         <HorizontalNav
+          alert={props.alert}
+          loaded={props.loaded}
+          loadError={props.loadError}
+          rule={props.rule}
+          silencesLoaded={props.silencesLoaded}
+          namespace={props.namespace}
           pages={allPages}
           pagesFor={props.pagesFor}
           className={`co-m-${_.get(props.kind, 'kind', props.kind)}`}
@@ -166,6 +174,12 @@ export type DetailsPageProps = {
   getResourceStatus?: (resource: K8sResourceKind) => string;
   children?: React.ReactNode;
   customKind?: string;
+  alert?: Alert;
+  loaded?: any;
+  loadError?: string;
+  rule?: Rule;
+  silencesLoaded?: boolean;
+  ele?: JSX.Element;
 };
 
 DetailsPage.displayName = 'DetailsPage';

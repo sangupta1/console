@@ -11,7 +11,7 @@ import { AsyncComponent } from './async';
 import { K8sResourceKind, K8sResourceCommon } from '../../module/k8s';
 import { referenceForModel, referenceFor } from '../../module/k8s/k8s';
 import { useExtensions, HorizontalNavTab, isHorizontalNavTab } from '@console/plugin-sdk';
-import { PodLogs } from '../pod-logs';
+import { Alert, Rule } from '../monitoring/types';
 
 const editYamlComponent = (props) => (
   <AsyncComponent loader={() => import('../edit-yaml').then((c) => c.EditYAML)} obj={props.obj} />
@@ -168,7 +168,6 @@ export const navFactory: NavFactory = {
 export const NavBar = withRouter<NavBarProps>(({ pages, baseURL, basePath }) => {
   const { t } = useTranslation();
   basePath = basePath.replace(/\/$/, '');
-  const isAlertsDetailPage = basePath === '/monitoring/alerts/:ruleID';
 
   const tabs = (
     <>
@@ -182,19 +181,12 @@ export const NavBar = withRouter<NavBarProps>(({ pages, baseURL, basePath }) => 
         });
         return (
           <li className={klass} key={nameKey || name}>
-            {!isAlertsDetailPage && (
-              <Link
-                to={`${baseURL.replace(/\/$/, '')}/${href}`}
-                data-test-id={`horizontal-link-${nameKey || name}`}
-              >
-                {nameKey ? t(nameKey) : name}
-              </Link>
-            )}
-            {isAlertsDetailPage && (
-              <a data-test-id={`horizontal-link-${nameKey || name}`}>
-                {nameKey ? t(nameKey) : name}
-              </a>
-            )}
+            <Link
+              to={`${baseURL.replace(/\/$/, '')}/${href}`}
+              data-test-id={`horizontal-link-${nameKey || name}`}
+            >
+              {nameKey ? t(nameKey) : name}
+            </Link>
           </li>
         );
       })}
@@ -242,7 +234,17 @@ export const HorizontalNav = React.memo((props: HorizontalNavProps) => {
   };
 
   const componentProps = {
-    ..._.pick(props, ['filters', 'selected', 'match', 'loaded']),
+    ..._.pick(props, [
+      'filters',
+      'selected',
+      'match',
+      'loaded',
+      'alert',
+      'rule',
+      'loadError',
+      'namespace',
+      'silencesLoaded',
+    ]),
     obj: _.get(props.obj, 'data'),
   };
   const extraResources = _.reduce(
@@ -269,8 +271,6 @@ export const HorizontalNav = React.memo((props: HorizontalNavProps) => {
 
   const pages = (props.pages || props.pagesFor(props.obj?.data)).concat(pluginPages);
 
-  const isAlertsDetailPage = props.match.path === '/monitoring/alerts/:ruleID';
-
   const routes = pages.map((p) => {
     const path = `${props.match.path}/${p.path || p.href}`;
     const render = (params) => {
@@ -284,7 +284,7 @@ export const HorizontalNav = React.memo((props: HorizontalNavProps) => {
         />
       );
     };
-    return <Route path={path} exact key={p.nameKey || p.name} render={render} />;
+    return <Route path={path} key={p.nameKey || p.name} render={render} />;
   });
 
   return (
@@ -299,15 +299,7 @@ export const HorizontalNav = React.memo((props: HorizontalNavProps) => {
           />
         )}
       </div>
-      {isAlertsDetailPage && (
-        <PodLogs
-          {...componentProps}
-          {...extraResources}
-          {...pages[0].pageData}
-          customData={props.customData}
-        />
-      )}
-      {!isAlertsDetailPage && renderContent(routes)}
+      {renderContent(routes)}
     </div>
   );
 }, _.isEqual);
@@ -340,6 +332,12 @@ export type HorizontalNavProps = {
   noStatusBox?: boolean;
   customData?: any;
   alertURL?: string;
+  alert?: Alert;
+  rule?: Rule;
+  loaded?: boolean;
+  loadError?: string;
+  namespace?: string;
+  silencesLoaded?: boolean;
 };
 
 export type PageComponentProps<R extends K8sResourceCommon = K8sResourceKind> = {
