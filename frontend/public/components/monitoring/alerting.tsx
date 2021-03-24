@@ -1,9 +1,10 @@
 import * as classNames from 'classnames';
 import i18next from 'i18next';
 import * as _ from 'lodash-es';
-import { Button, Popover, Split, SplitItem } from '@patternfly/react-core';
+import { Button, Popover, Split, SplitItem, TextInput } from '@patternfly/react-core';
 import { sortable } from '@patternfly/react-table';
 import * as React from 'react';
+import { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
@@ -592,6 +593,36 @@ const Details: React.FC = (props) => {
   const { alert, namespace, rule, silencesLoaded } = props;
   const state = alertState(alert);
   const { t } = useTranslation();
+  const [val, setVal] = useState("");
+  const handleTextInputChange = value1 => {
+    setVal(value1);
+  };
+
+  const handleSubmit = async () => {
+    console.log(val);
+    const url = 'https://jsonplaceholder.typicode.com/todos/1';
+      const postData = {
+        title: 'foo',
+        body: 'bar',
+        userId: 1,
+      };
+
+      try {
+        const response = await fetch(url);
+        let responseData;
+        await response.json().then((json) => {
+          responseData = json;
+        });
+        console.log(responseData);
+        //sc(responseData);
+        return responseData;
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err);
+        throw err;
+      }
+  };
+
   const silencesTableHeader = () =>
     getSilenceTableHeader(t).map((h) => _.pick(h, ['title', 'props']));
 
@@ -601,6 +632,21 @@ const Details: React.FC = (props) => {
   //console.log(props);
   return (
     <>
+    jjhjh 
+    <div className="row">
+      <div className="col-sm-4">
+    <TextInput
+            isRequired
+            type="text"
+            id="simple-form-name"
+            name="simple-form-name"
+            aria-describedby="simple-form-name-helper"
+            value={val}
+            onChange={handleTextInputChange}
+          />
+          </div>
+          <Button variant="primary" onClick={handleSubmit}>Submit form</Button>
+          </div>
       <div className="co-m-pane__body">
         <ToggleGraph />
         <SectionHeading text={t('public~Alert details')} />
@@ -734,6 +780,29 @@ export const AlertsDetailsPage = withFallback(
     const { alert, loaded, loadError, namespace, rule, silencesLoaded, match } = props;
     const { t } = useTranslation();
     const state = alertState(alert);
+    /*const exampleApi = async () => {
+      const url = 'https://jsonplaceholder.typicode.com/todos/1';
+      const postData = {
+        title: 'foo',
+        body: 'bar',
+        userId: 1,
+      };
+
+      try {
+        const response = await fetch(url);
+        let responseData;
+        await response.json().then((json) => {
+          responseData = json;
+        });
+        console.log(responseData);
+        //sc(responseData);
+        return responseData;
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err);
+        throw err;
+      }
+    };*/
 
     const labelsMemoKey = JSON.stringify(alert?.labels);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -774,6 +843,8 @@ export const AlertsDetailsPage = withFallback(
       badge: null,
     };
 
+    //console.log(exampleApi());
+
     return (
       <DetailsPage
         alert={alert}
@@ -782,10 +853,10 @@ export const AlertsDetailsPage = withFallback(
         silencesLoaded={silencesLoaded}
         loadError={props.loadError}
         match={match}
-        namespace={namespace}
+        namespace={alertPodObj.namespace}
         kind={alertPodObj.kind}
         kindObj={alertPodObj.kindObj}
-        //name={alertPodObj.name}
+        name={alertPodObj.name}
         //badge={alertPodObj.badge}
         //getResourceStatus={podPhase}
         ele={ele}
