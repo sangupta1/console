@@ -81,14 +81,10 @@ import {
   SilenceResource,
   silenceState,
   silencesToProps,
-<<<<<<< HEAD
 } from './utils';
-=======
-} from '../monitoring/utils';
 import { DetailsPage } from '../factory/details';
 import { AlertLogs } from './alert-logs';
 import { navFactory } from '../utils';
->>>>>>> Added logs for the Alert Pod on Monitring/Alerts page
 import { refreshNotificationPollers } from '../notification-drawer';
 import { formatPrometheusDuration } from '../utils/datetime';
 import { ActionsMenu } from '../utils/dropdown';
