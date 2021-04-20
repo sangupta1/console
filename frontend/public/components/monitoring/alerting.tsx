@@ -85,7 +85,7 @@ import {
   silencesToProps,
 } from '../monitoring/utils';
 import { DetailsPage } from '../factory/details';
-import { AlertLogs } from './alert-logs';
+import  AlertLogs  from './alert-logs';
 import { navFactory } from '../utils';
 import { refreshNotificationPollers } from '../notification-drawer';
 import { formatPrometheusDuration } from '../utils/datetime';
@@ -101,6 +101,9 @@ import { LoadingInline, StatusBox } from '../utils/status-box';
 import { Timestamp } from '../utils/timestamp';
 import { getPrometheusURL, PrometheusEndpoint } from '../graphs/helpers';
 import { breadcrumbsForGlobalConfig } from '../cluster-settings/global-config';
+import { useK8sGet } from '../utils/k8s-get-hook';
+import { InfrastructureModel } from '../../models';
+import { K8sResourceKind } from '../../module/k8s';
 
 const ruleURL = (rule: Rule) => `${RuleResource.plural}/${_.get(rule, 'id')}`;
 
@@ -570,7 +573,9 @@ const getSilenceTableHeader = (t) => [
   },
 ];
 
-const alertStateToProps = (state: RootState, { match }): AlertsDetailsPageProps => {
+ const alertStateToProps = (state: RootState, { match }): AlertsDetailsPageProps => {
+  //console.log(state.UI.getIn(['monitoring']));
+  //console.log(state.FLAGS.get('OPENSHIFT'));
   const perspective = _.has(match.params, 'ns') ? 'dev' : 'admin';
   const namespace = match.params?.ns;
   const { data, loaded, loadError }: Alerts = alertsToProps(state, perspective);
@@ -592,6 +597,14 @@ const alertStateToProps = (state: RootState, { match }): AlertsDetailsPageProps 
 
 const Details: React.FC = (props) => {
   const { alert, namespace, rule, silencesLoaded } = props;
+  /*const { infrastructure, infrastructureLoaded, infrastructureError } = React.useContext(
+    ClusterDashboardContext,
+  );*/
+  const [infrastructure, infrastructureLoaded, infrastructureError] = useK8sGet<K8sResourceKind>(
+    InfrastructureModel,
+    'cluster',
+  );
+  //console.log(JSON.stringify(infrastructure));
   const state = alertState(alert);
   const { t } = useTranslation();
 
@@ -781,11 +794,11 @@ export const AlertsDetailsPage = withFallback(
 
     return (
       <DetailsPage
-        alert={alert}
+        //alert={alert}
         loaded={loaded}
-        rule={rule}
-        silencesLoaded={silencesLoaded}
-        loadError={props.loadError}
+        //rule={rule}
+        //silencesLoaded={silencesLoaded}
+        //loadError={props.loadError}
         match={match}
         namespace={alertPodObj.namespace}
         kind={alertPodObj.kind}
@@ -804,7 +817,8 @@ export const AlertsDetailsPage = withFallback(
         //{...props}
         //getResourceStatus={podPhase}
         //menuActions={menuActions}
-        pages={[navFactory.details(Details), navFactory.logs(AlertLogs)]}
+        pages={[navFactory.details(()=> <Details alert={alert} rule={rule} namespace={alertPodObj.namespace} silencesLoaded={silencesLoaded} />), 
+          navFactory.logs(AlertLogs)]}
       />
     );
   }),

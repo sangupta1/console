@@ -89,6 +89,7 @@ export const LogControls: React.FC<LogControlsProps> = ({
   containerName,
   podLogLinks,
   namespaceUID,
+  alertLogs,
 }) => {
   const { t } = useTranslation();
   return (
@@ -101,10 +102,11 @@ export const LogControls: React.FC<LogControlsProps> = ({
               &nbsp;
             </>
           )}
-          {[STREAM_ACTIVE, STREAM_PAUSED].includes(status) && (
+          
+          {alertLogs=== undefined && [STREAM_ACTIVE, STREAM_PAUSED].includes(status) && (
             <TogglePlay active={status === STREAM_ACTIVE} onClick={toggleStreaming} />
           )}
-          {t(streamStatusMessages[status])}
+          {alertLogs===undefined && t(streamStatusMessages[status])}
         </div>
         {dropdown && <div className="co-toolbar__item">{dropdown}</div>}
       </div>
@@ -179,13 +181,15 @@ export const LogControls: React.FC<LogControlsProps> = ({
 };
 
 // Resource agnostic log component
-export const ResourceLog: React.FC<ResourceLogProps> = ({
+export const AlertResourceLog: React.FC<ResourceLogProps> = ({
   bufferSize = DEFAULT_BUFFER_SIZE,
   containerName,
   dropdown,
   resource,
   resourceStatus,
+  alertLogs,
 }) => {
+  //console.log(alertLogs);
   const { t } = useTranslation();
   const buffer = React.useRef(new LineBuffer(bufferSize)); // TODO Make this a hook
   const ws = React.useRef<any>(); // TODO Make this a hook
@@ -391,7 +395,20 @@ export const ResourceLog: React.FC<ResourceLogProps> = ({
           containerName={containerName}
           podLogLinks={podLogLinks}
           namespaceUID={namespaceUID}
+          alertLogs={alertLogs}
         />
+        {alertLogs !== '' && alertLogs !== undefined && (
+        <LogWindow
+          bufferFull={bufferFull}
+          isFullscreen={isFullscreen}
+          lines={alertLogs}
+          linesBehind={linesBehind}
+          status={status}
+          updateStatus={setStatus}
+          isHttpApi={true}
+        />
+        )}
+        {alertLogs === undefined && (
         <LogWindow
           bufferFull={bufferFull}
           isFullscreen={isFullscreen}
@@ -400,6 +417,7 @@ export const ResourceLog: React.FC<ResourceLogProps> = ({
           status={status}
           updateStatus={setStatus}
         />
+        )}
       </div>
     </>
   );
@@ -416,6 +434,7 @@ type LogControlsProps = {
   namespaceUID?: string;
   toggleStreaming?: () => void;
   toggleFullscreen: () => void;
+  alertLogs?: any;
 };
 
 type ResourceLogProps = {
@@ -424,4 +443,5 @@ type ResourceLogProps = {
   dropdown?: React.ReactNode;
   resource: any;
   resourceStatus: string;
+  alertLogs?: any;
 };

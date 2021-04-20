@@ -114,7 +114,7 @@ class LogWindowWithTranslation extends React.PureComponent {
   }
 
   render() {
-    const { bufferFull, lines, linesBehind, status, t } = this.props;
+    const { bufferFull, lines, linesBehind, status, t, isHttpApi } = this.props;
     const { content, height } = this.state;
     // TODO maybe move these variables into state so they are only updated on changes
     const headerText = bufferFull
@@ -135,7 +135,7 @@ class LogWindowWithTranslation extends React.PureComponent {
             </div>
           </div>
         </div>
-        {status === STREAM_PAUSED && (
+        {!isHttpApi && status === STREAM_PAUSED && (
           <Button onClick={this._unpause} isBlock>
             <OutlinedPlayCircleIcon />
             &nbsp;{resumeText}
@@ -154,4 +154,5 @@ LogWindow.propTypes = {
   linesBehind: PropTypes.number.isRequired,
   status: PropTypes.string.isRequired,
   updateStatus: PropTypes.func.isRequired,
+  isHttpApi?: PropTypes.bool,
 };
