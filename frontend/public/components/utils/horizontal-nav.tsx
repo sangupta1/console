@@ -62,7 +62,7 @@ export type Page = {
 type NavFactory = { [name: string]: (c?: React.ComponentType<any>) => Page };
 export const navFactory: NavFactory = {
   details: (component) => ({
-    href: '',
+    href: 'logs',
     // t('details-page~Details')
     nameKey: 'details-page~Details',
     component,
@@ -74,7 +74,7 @@ export const navFactory: NavFactory = {
     component,
   }),
   logs: (component) => ({
-    href: 'logs',
+    href: '',
     // t('details-page~Logs')
     nameKey: 'details-page~Logs',
     component,

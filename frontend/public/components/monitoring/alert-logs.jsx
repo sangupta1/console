@@ -38,6 +38,7 @@ import {
   SilenceResource,
   silencesToProps,
 } from '../monitoring/utils';
+import { newJSONDocument } from 'yaml-language-server/out/server/src/languageservice/parser/jsonParser07';
 const containersToStatuses = ({ status }, containers) => {
   return _.reduce(
     containers,
@@ -130,8 +131,8 @@ const containerToLogSourceStatus = (container) => {
     const {pod, namespace }= this.props.alert?.labels;
     const {activeAt}= this.props.alert;
     //console.log(this.props.alert);
-    //console.log(pod);
-    //console.log(namespace);
+    console.log(pod);
+    console.log(namespace);
 
     const startTimeIso = this.getStartTime();
     
@@ -142,24 +143,33 @@ const containerToLogSourceStatus = (container) => {
     //const url = `http://log-exploration-api-route-openshift-logging.apps.abhansal-cluster-april14.devcluster.openshift.com/logs/indexfilter/infra-000001`;
     //const url = `http://log-exploration-api-route-openshift-logging.apps.abhansal-cluster-april14.devcluster.openshift.com/logs/podnamefilter/${name}`;
     //const url = `http://log-exploration-api-route-openshift-logging.apps.abhansal-cluster-april14.devcluster.openshift.com/logs/timefilter/${startTimeIso}/${alert.activeAt}`;
-    //const url = `http://log-exploration-api-route-openshift-logging.apps.abhansal-cluster-april14.devcluster.openshift.com/logs/`;
-    const url= 'https://jsonplaceholder.typicode.com/todos/1';
-    //const url= 'http://log-exploration-api-route-openshift-logging.apps.abhansal-cluster-apr16.devcluster.openshift.com/logs/filter';
+    const url = `http://log-exploration-api-route-openshift-logging.apps.sangupta-eghgj.devcluster.openshift.com/logs/filter?`;
+    //const url= 'https://jsonplaceholder.typicode.com/todos/1';
+    //const url= 'http://log-exploration-api-route-openshift-logging.apps.emishra-header-test.devcluster.openshift.com/logs/filter?namespace=openshift-kube-scheduler&maxlogs=1';
     //console.log(url);
     const postData = {
-        title: 'foo',
-        body: 'bar',
-        userId: 1,
+        namespace: 'openshift-kube-scheduler',
+        maxlogs: 1,
       };
       //console.log(url);
       try {
-        const response = await fetch(url);
+        const response = await coFetch(url+ new URLSearchParams({
+          namespace: namespace,
+          pod: pod,
+          maxlogs: 2,
+      }));
         //const response = await fetch(url);
         let responseData;
         await response.json().then((json) => {
           responseData = json;
-          //console.log(json.title);
-          this.setState({alertLogs: ['hj']});
+          //console.log(JSON.stringify(JSON.parse(json.Logs)));
+          //console.log(json.Logs[0]);
+          console.log(JSON.parse(json.Logs[0])['_source'].message);
+          json.Logs.forEach(element => {
+            const rt=JSON.parse(element)['_source']['message'];
+            console.log(rt);
+          });
+          this.setState({alertLogs: json.Logs[0].source.message});
         });
         //console.log(responseData);
         //sc(responseData);
