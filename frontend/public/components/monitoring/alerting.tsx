@@ -84,7 +84,6 @@ import {
 } from './utils';
 import { DetailsPage } from '../factory/details';
 import AlertLogs from './alert-logs';
-import { navFactory } from '../utils';
 import { refreshNotificationPollers } from '../notification-drawer';
 import { formatPrometheusDuration } from '../utils/datetime';
 import { ActionsMenu } from '../utils/dropdown';
@@ -95,6 +94,7 @@ import { ExternalLink, getURLSearchParams } from '../utils/link';
 import { ResourceLink } from '../utils/resource-link';
 import { ResourceStatus } from '../utils/resource-status';
 import { history } from '../utils/router';
+import { Location } from 'history';
 import { LoadingInline, StatusBox } from '../utils/status-box';
 import { Timestamp } from '../utils/timestamp';
 import { getPrometheusURL, PrometheusEndpoint } from '../graphs/helpers';
@@ -585,6 +585,7 @@ const alertStateToProps = (state: RootState, { match }): AlertsDetailsPageProps 
     namespace,
     rule,
     silencesLoaded,
+    location,
   };
 };
 
@@ -731,7 +732,7 @@ const Details = (props) => {
 
 export const AlertsDetailsPage = withFallback(
   connect(alertStateToProps)((props: AlertsDetailsPageProps) => {
-    const { alert, loaded, loadError, namespace, rule, silencesLoaded, match } = props;
+    const { alert, loaded, loadError, namespace, rule, silencesLoaded, match, location } = props;
     const state = alertState(alert);
 
     const { t } = useTranslation();
@@ -739,6 +740,8 @@ export const AlertsDetailsPage = withFallback(
     const labelsMemoKey = JSON.stringify(alert?.labels);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const labels: PrometheusLabels = React.useMemo(() => alert?.labels, [labelsMemoKey]);
+
+    const queryParams: string = React.useMemo(() => location?.search, [location]);
 
     const ele = (
       <StatusBox data={alert} label={AlertResource.label} loaded={loaded} loadError={loadError}>
@@ -793,15 +796,26 @@ export const AlertsDetailsPage = withFallback(
           { name: t('public~Alert details'), path: undefined },
         ]}
         pages={[
-          navFactory.details(() => (
-            <Details
-              alert={alert}
-              rule={rule}
-              namespace={alertPodObj.namespace}
-              silencesLoaded={silencesLoaded}
-            />
-          )),
-          navFactory.logs(AlertLogs),
+          {
+            href: '',
+            queryParams,
+            // t('details-page~Details')
+            nameKey: 'details-page~Details',
+            component: Details,
+            pageData: {
+              alert,
+              rule,
+              namespace: alertPodObj.namespace,
+              silencesLoaded,
+            },
+          },
+          {
+            href: 'logs',
+            queryParams,
+            // t('details-page~Logs')
+            nameKey: 'details-page~Logs',
+            component: AlertLogs,
+          },
         ]}
       />
     );
@@ -1729,7 +1743,7 @@ const PollerPages = () => {
         component={AlertingPage}
       />
       <Route path="/monitoring/alertrules/:id" exact component={AlertRulesDetailsPage} />
-      <Route path="/monitoring/alerts/:ruleID" exact component={AlertsDetailsPage} />
+      <Route path="/monitoring/alerts/:ruleID" component={AlertsDetailsPage} />
       <Route path="/monitoring/silences/:id" exact component={SilencesDetailsPage} />
       <Route path="/monitoring/silences/:id/edit" exact component={EditSilence} />
     </Switch>
@@ -1758,6 +1772,7 @@ type AlertsDetailsPageProps = {
   rule: Rule;
   silencesLoaded: boolean;
   match?: any;
+  location?: Location<any>;
 };
 
 type AlertMessageProps = {
