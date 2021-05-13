@@ -85,7 +85,7 @@ import {
   silencesToProps,
 } from '../monitoring/utils';
 import { DetailsPage } from '../factory/details';
-import  AlertLogs  from './alert-logs';
+import  AlertLogs  from './alert-logs.tsx';
 import { navFactory } from '../utils';
 import { refreshNotificationPollers } from '../notification-drawer';
 import { formatPrometheusDuration } from '../utils/datetime';
@@ -97,13 +97,11 @@ import { ExternalLink, getURLSearchParams } from '../utils/link';
 import { ResourceLink } from '../utils/resource-link';
 import { ResourceStatus } from '../utils/resource-status';
 import { history } from '../utils/router';
+import { Location } from 'history';
 import { LoadingInline, StatusBox } from '../utils/status-box';
 import { Timestamp } from '../utils/timestamp';
 import { getPrometheusURL, PrometheusEndpoint } from '../graphs/helpers';
 import { breadcrumbsForGlobalConfig } from '../cluster-settings/global-config';
-import { useK8sGet } from '../utils/k8s-get-hook';
-import { InfrastructureModel } from '../../models';
-import { K8sResourceKind } from '../../module/k8s';
 
 const ruleURL = (rule: Rule) => `${RuleResource.plural}/${_.get(rule, 'id')}`;
 
@@ -592,6 +590,7 @@ const getSilenceTableHeader = (t) => [
     namespace,
     rule,
     silencesLoaded,
+    location,
   };
 };
 
@@ -600,11 +599,7 @@ const Details: React.FC = (props) => {
   /*const { infrastructure, infrastructureLoaded, infrastructureError } = React.useContext(
     ClusterDashboardContext,
   );*/
-  const [infrastructure, infrastructureLoaded, infrastructureError] = useK8sGet<K8sResourceKind>(
-    InfrastructureModel,
-    'cluster',
-  );
-  //console.log(JSON.stringify(infrastructure));
+  
   const state = alertState(alert);
   const { t } = useTranslation();
 
@@ -746,7 +741,7 @@ const Details: React.FC = (props) => {
 
 export const AlertsDetailsPage = withFallback(
   connect(alertStateToProps)((props: AlertsDetailsPageProps) => {
-    const { alert, loaded, loadError, namespace, rule, silencesLoaded, match } = props;
+    const { alert, loaded, loadError, namespace, rule, silencesLoaded, match, location } = props;
     const state = alertState(alert);
 
     const { t } = useTranslation();
@@ -754,6 +749,8 @@ export const AlertsDetailsPage = withFallback(
     const labelsMemoKey = JSON.stringify(alert?.labels);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const labels: PrometheusLabels = React.useMemo(() => alert?.labels, [labelsMemoKey]);
+
+    const queryParams: string = React.useMemo(() => location?.search, []);
 
     const ele = (
       <StatusBox data={alert} label={AlertResource.label} loaded={loaded} loadError={loadError}>
@@ -817,8 +814,30 @@ export const AlertsDetailsPage = withFallback(
         //{...props}
         //getResourceStatus={podPhase}
         //menuActions={menuActions}
-        pages={[navFactory.details(()=> <Details alert={alert} rule={rule} namespace={alertPodObj.namespace} silencesLoaded={silencesLoaded} />), 
-          navFactory.logs(AlertLogs)]}
+        /*pages={[navFactory.details(()=> <Details alert={alert} rule={rule} namespace={alertPodObj.namespace} silencesLoaded={silencesLoaded} />), 
+          navFactory.logs(AlertLogs)]}*/
+          pages={[
+            {
+              href: '',
+              queryParams,
+              // t('details-page~Details')
+              nameKey: 'details-page~Details',
+              component: Details,
+              pageData: {
+                alert,
+                rule,
+                namespace: alertPodObj.namespace,
+                silencesLoaded,
+              },
+            },
+            {
+              href: 'logs',
+              queryParams,
+              // t('details-page~Logs')
+              nameKey: 'details-page~Logs',
+              component: AlertLogs,
+            },
+          ]}
       />
     );
   }),
@@ -1745,7 +1764,7 @@ const PollerPages = () => {
         component={AlertingPage}
       />
       <Route path="/monitoring/alertrules/:id" exact component={AlertRulesDetailsPage} />
-      <Route path="/monitoring/alerts/:ruleID" exact component={AlertsDetailsPage} />
+      <Route path="/monitoring/alerts/:ruleID" component={AlertsDetailsPage} />
       <Route path="/monitoring/silences/:id" exact component={SilencesDetailsPage} />
       <Route path="/monitoring/silences/:id/edit" exact component={EditSilence} />
     </Switch>
@@ -1774,6 +1793,7 @@ type AlertsDetailsPageProps = {
   rule: Rule;
   silencesLoaded: boolean;
   match?: any;
+  location?: Location<any>;
 };
 
 type AlertMessageProps = {

@@ -57,12 +57,13 @@ export type Page = {
   nameKey?: string;
   component?: React.ComponentType<PageComponentProps>;
   pageData?: any;
+  queryParams?: string;
 };
 
 type NavFactory = { [name: string]: (c?: React.ComponentType<any>) => Page };
 export const navFactory: NavFactory = {
   details: (component) => ({
-    href: 'logs',
+    href: '',
     // t('details-page~Details')
     nameKey: 'details-page~Details',
     component,
@@ -74,7 +75,7 @@ export const navFactory: NavFactory = {
     component,
   }),
   logs: (component) => ({
-    href: '',
+    href: 'logs',
     // t('details-page~Logs')
     nameKey: 'details-page~Logs',
     component,
@@ -171,7 +172,7 @@ export const NavBar = withRouter<NavBarProps>(({ pages, baseURL, basePath }) => 
 
   const tabs = (
     <>
-      {pages.map(({ name, nameKey, href, path }) => {
+      {pages.map(({ name, nameKey, href, path, queryParams }) => {
         const matchURL = matchPath(location.pathname, {
           path: `${basePath}/${path || href}`,
           exact: true,
@@ -182,7 +183,7 @@ export const NavBar = withRouter<NavBarProps>(({ pages, baseURL, basePath }) => 
         return (
           <li className={klass} key={nameKey || name}>
             <Link
-              to={`${baseURL.replace(/\/$/, '')}/${href}`}
+              to={`${baseURL.replace(/\/$/, '')}/${href}${queryParams ?? ''}`}
               data-test-id={`horizontal-link-${nameKey || name}`}
             >
               {nameKey ? t(nameKey) : name}
