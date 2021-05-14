@@ -57,7 +57,7 @@ const AlertLogs = (props: AlertLogsProps) => {
         constructApiUrl();
         const {pod, namespace }= props.alert?.labels;
       //console.log("component did mount");
-      const url= 'http://log-exploration-api-route-openshift-logging.apps.emishra-may11.devcluster.openshift.com/logs/filter?';
+      const url= 'http://log-exploration-api-route-openshift-logging.apps.sangupta-may14eqrt.devcluster.openshift.com/logs/filter?';
     constructApiUrl();
       //console.log(url);
       try {
@@ -184,7 +184,7 @@ const AlertLogs = (props: AlertLogsProps) => {
     //const url= 'http://log-exploration-api-route-openshift-logging.apps.sangupta-may9qfr.devcluster.openshift.com/logs/filter?'
     //const url= 'http://log-exploration-api-route-openshift-logging.apps.emishra-header-test.devcluster.openshift.com/logs/filter?namespace=openshift-kube-scheduler&maxlogs=1';
     //console.log(url);
-    const url= 'http://log-exploration-api-route-openshift-logging.apps.emishra-may11.devcluster.openshift.com/logs/filter?';
+    const url= 'http://log-exploration-api-route-openshift-logging.apps.sangupta-may14eqrt.devcluster.openshift.com/logs/filter?';
     constructApiUrl();
       //console.log(url);
       try {
@@ -240,7 +240,7 @@ const AlertLogs = (props: AlertLogsProps) => {
           <>
           <div className="row">
           <div className="col-sm-3">
-          <TimePicker is24Hour delimiter="h" placeholder="" onChange={handleTimeInputChange}/>
+          <TimePicker is24Hour delimiter="h" placeholder="Time" onChange={handleTimeInputChange}/>
         <TextInput
                 isRequired
                 type="text"
@@ -249,9 +249,10 @@ const AlertLogs = (props: AlertLogsProps) => {
                 aria-describedby="simple-form-name-helper"
                 value={maxLogsInput}
                 onChange={handleTextInputChange}
+                placeholder="Max Logs"
         />
               </div>
-              <Button variant="primary" onClick={handleSubmit} isDisabled={timeInput=== ''}>Submit form123</Button>
+              <Button variant="primary" onClick={handleSubmit} isDisabled={timeInput=== ''}>Get Logs</Button>
               </div>
           <div className="co-m-pane__body">
               <AlertResourceLog
