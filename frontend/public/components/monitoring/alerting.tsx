@@ -100,7 +100,9 @@ import { Timestamp } from '../utils/timestamp';
 import { getPrometheusURL, PrometheusEndpoint } from '../graphs/helpers';
 import { breadcrumbsForGlobalConfig } from '../cluster-settings/global-config';
 
-const ruleURL = (rule: Rule) => `${RuleResource.plural}/${_.get(rule, 'id')}`;
+import { Details } from './alert-details';
+
+export const ruleURL = (rule: Rule) => `${RuleResource.plural}/${_.get(rule, 'id')}`;
 
 const pollers = {};
 const pollerTimeouts = {};
@@ -144,7 +146,10 @@ const silenceMenuActions = (silence: Silence) =>
 
 const SilenceKebab = ({ silence }) => <Kebab options={silenceMenuActions(silence)} />;
 
-const MonitoringResourceIcon: React.FC<MonitoringResourceIconProps> = ({ className, resource }) => (
+export const MonitoringResourceIcon: React.FC<MonitoringResourceIconProps> = ({
+  className,
+  resource,
+}) => (
   <span
     className={classNames(
       `co-m-resource-icon co-m-resource-${resource.kind.toLowerCase()}`,
@@ -194,7 +199,7 @@ export const StateTimestamp = ({ text, timestamp }) => (
   </div>
 );
 
-const AlertStateDescription = ({ alert }) => {
+export const AlertStateDescription = ({ alert }) => {
   if (alert && !_.isEmpty(alert.silencedBy)) {
     return <StateTimestamp text="Ends" timestamp={_.max(_.map(alert.silencedBy, 'endsAt'))} />;
   }
@@ -275,7 +280,10 @@ export const StateCounts: React.FC<{ alerts: PrometheusAlert[] }> = ({ alerts })
   );
 };
 
-const PopoverField: React.FC<{ body: React.ReactNode; label: string }> = ({ body, label }) => (
+export const PopoverField: React.FC<{ body: React.ReactNode; label: string }> = ({
+  body,
+  label,
+}) => (
   <Popover headerContent={label} bodyContent={body}>
     <Button variant="plain" className="details-item__popover-button">
       {label}
@@ -283,7 +291,7 @@ const PopoverField: React.FC<{ body: React.ReactNode; label: string }> = ({ body
   </Popover>
 );
 
-const alertStateHelp = (
+export const alertStateHelp = (
   <dl className="co-inline">
     <dt>
       <AlertStateIcon state={AlertStates.Pending} /> <strong>Pending: </strong>
@@ -311,7 +319,7 @@ const alertStateHelp = (
   </dl>
 );
 
-const severityHelp = (
+export const severityHelp = (
   <dl className="co-inline">
     <dt>
       <SeverityIcon severity={AlertSeverity.Critical} /> <strong>Critical: </strong>
@@ -341,7 +349,7 @@ const severityHelp = (
   </dl>
 );
 
-const sourceHelp = (
+export const sourceHelp = (
   <dl className="co-inline">
     <dt>
       <strong>Platform: </strong>
@@ -361,7 +369,7 @@ const sourceHelp = (
   </dl>
 );
 
-const Annotation = ({ children, title }) =>
+export const Annotation = ({ children, title }) =>
   _.isNil(children) ? null : (
     <>
       <dt>{title}</dt>
@@ -369,7 +377,7 @@ const Annotation = ({ children, title }) =>
     </>
   );
 
-const Label = ({ k, v }) => (
+export const Label = ({ k, v }) => (
   <div className="co-m-label co-m-label--expand" key={k}>
     <span className="co-m-label__key">{k}</span>
     <span className="co-m-label__eq">=</span>
@@ -382,7 +390,7 @@ const queryBrowserURL = (query: string, namespace: string) =>
     ? `/dev-monitoring/ns/${namespace}/metrics?query0=${encodeURIComponent(query)}`
     : `/monitoring/query-browser?query0=${encodeURIComponent(query)}`;
 
-const Graph: React.FC<GraphProps> = ({
+export const Graph: React.FC<GraphProps> = ({
   filterLabels = undefined,
   formatLegendLabel,
   namespace,
@@ -430,7 +438,7 @@ const SilenceMatchersList = ({ silence }) => (
   </div>
 );
 
-const SilenceTableRow: RowFunction<Silence> = ({ index, key, obj, style }) => {
+export const SilenceTableRow: RowFunction<Silence> = ({ index, key, obj, style }) => {
   const { createdBy, endsAt, firingAlerts, id, name, startsAt } = obj;
   const state = silenceState(obj);
 
@@ -483,7 +491,7 @@ export const alertMessageResources: { [labelName: string]: K8sKind } = {
 const matchCount = (haystack: string, regExpString: string) =>
   _.size(haystack.match(new RegExp(regExpString, 'g')));
 
-const AlertMessage: React.FC<AlertMessageProps> = ({ alertText, labels, template }) => {
+export const AlertMessage: React.FC<AlertMessageProps> = ({ alertText, labels, template }) => {
   if (_.isEmpty(alertText)) {
     return null;
   }
@@ -537,7 +545,7 @@ const HeaderAlertMessage: React.FC<{ alert: Alert; rule: Rule }> = ({ alert, rul
   );
 };
 
-const getSilenceTableHeader = (t) => [
+export const getSilenceTableHeader = (t) => [
   {
     title: t('public~Name'),
     sortField: 'name',
@@ -587,147 +595,6 @@ const alertStateToProps = (state: RootState, { match }): AlertsDetailsPageProps 
     silencesLoaded,
     location,
   };
-};
-
-const Details = (props) => {
-  const { alert, namespace, rule, silencesLoaded } = props;
-  const state = alertState(alert);
-  const { t } = useTranslation();
-
-  const silencesTableHeader = () =>
-    getSilenceTableHeader(t).map((h) => _.pick(h, ['title', 'props']));
-
-  const labelsMemoKey = JSON.stringify(alert?.labels);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const labels: PrometheusLabels = React.useMemo(() => alert?.labels, [labelsMemoKey]);
-  //console.log(props);
-  return (
-    <>
-      <div className="co-m-pane__body">
-        <ToggleGraph />
-        <SectionHeading text={t('public~Alert details')} />
-        <div className="co-m-pane__body-group">
-          <div className="row">
-            <div className="col-sm-12">
-              <Graph
-                filterLabels={labels}
-                namespace={namespace}
-                query={rule?.query}
-                ruleDuration={rule?.duration}
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-sm-6">
-              <dl className="co-m-pane__details">
-                <dt>{t('public~Name')}</dt>
-                <dd>{labels?.alertname}</dd>
-                <dt>
-                  <PopoverField label={t('public~Severity')} body={severityHelp} />
-                </dt>
-                <dd>
-                  <Severity severity={labels?.severity} />
-                </dd>
-                {alert?.annotations?.description && (
-                  <Annotation title={t('public~Description')}>
-                    <AlertMessage
-                      alertText={alert.annotations.description}
-                      labels={labels}
-                      template={rule?.annotations.description}
-                    />
-                  </Annotation>
-                )}
-                <Annotation title={t('public~Summary')}>{alert?.annotations?.summary}</Annotation>
-                {alert?.annotations?.message && (
-                  <Annotation title={t('public~Message')}>
-                    <AlertMessage
-                      alertText={alert.annotations.message}
-                      labels={labels}
-                      template={rule?.annotations.message}
-                    />
-                  </Annotation>
-                )}
-              </dl>
-            </div>
-            <div className="col-sm-6">
-              <dl className="co-m-pane__details">
-                <dt>
-                  <PopoverField label={t('public~Source')} body={sourceHelp} />
-                </dt>
-                <dd>{alert && _.startCase(alertSource(alert))}</dd>
-                <dt>
-                  <PopoverField label={t('public~State')} body={alertStateHelp} />
-                </dt>
-                <dd>
-                  <AlertState state={state} />
-                  <AlertStateDescription alert={alert} />
-                </dd>
-              </dl>
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-xs-12">
-              <dl className="co-m-pane__details" data-test="label-list">
-                <dt>{t('public~Labels')}</dt>
-                <dd>
-                  {_.isEmpty(labels) ? (
-                    <div className="text-muted">No labels</div>
-                  ) : (
-                    <div className={`co-text-${AlertResource.kind.toLowerCase()}`}>
-                      {_.map(labels, (v, k) => (
-                        <Label key={k} k={k} v={v} />
-                      ))}
-                    </div>
-                  )}
-                </dd>
-              </dl>
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-xs-12">
-              <dl className="co-m-pane__details">
-                <dt>{t('public~Alerting rule')}</dt>
-                <dd>
-                  <div className="co-resource-item">
-                    <MonitoringResourceIcon resource={RuleResource} />
-                    <Link
-                      to={
-                        namespace
-                          ? `/dev-monitoring/ns/${namespace}/rules/${rule?.id}`
-                          : ruleURL(rule)
-                      }
-                      data-test="alert-rules-detail-resource-link"
-                      className="co-resource-item__resource-name"
-                    >
-                      {_.get(rule, 'name')}
-                    </Link>
-                  </div>
-                </dd>
-              </dl>
-            </div>
-          </div>
-        </div>
-      </div>
-      {silencesLoaded && !_.isEmpty(alert?.silencedBy) && (
-        <div className="co-m-pane__body">
-          <div className="co-m-pane__body-group">
-            <SectionHeading text="Silenced By" />
-            <div className="row">
-              <div className="col-xs-12">
-                <Table
-                  aria-label="Silenced By"
-                  data={alert?.silencedBy}
-                  Header={silencesTableHeader}
-                  loaded={true}
-                  Row={SilenceTableRow}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
 };
 
 export const AlertsDetailsPage = withFallback(
